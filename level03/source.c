@@ -1,19 +1,55 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <time.h>
 
-int	test(char *buffer, unsigned int offset)
+int	test(int n, unsigned int offset)
 {
-	char	*addr;
+	void	(*jmp)();
+	void	*addr;
 
-	addr = buffer - offset;
+	addr = (void*)((size_t)n - (size_t)offset);
 
-	if (addr <= 21)
+	if (addr > (void*)21)
 		return (decrypt(rand()));
 
-	func();
-	((void (*) ())((addr << 2) + 0x80489f0))();
-	return (0);
+	memcpy(jmp, (void*)(((size_t)addr << 2) + 0x80489f0), 4);
+
+	(*jmp)();
+
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+	decrypt(addr);
+	goto out;
+
+	decrypt(rand());
+	out : return (0);
 }
 
 int		main(void)
@@ -26,7 +62,7 @@ int		main(void)
 	puts("***********************************");
 
 	printf("Password:");
-	scanf("%d", buffer);
-	test(&buffer[0], 0x1337d00d);
+	scanf("%d", (int*)buffer);
+	test(*(int*)buffer, 0x1337d00d);
 	return (0);
 }
