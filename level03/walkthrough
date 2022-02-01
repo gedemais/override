@@ -232,3 +232,31 @@ Dump of assembler code for function clear_stdin:
 
 Address of the system call (with param loading) : 0x08048715
 0x080489f0
+
+********************************************************************************
+We can see five functions, with a call to system('/bin/bash') in decrypt.
+So we probably should reach this address to get a shell. We are prompted for input
+by the scanf call, before the main function calls test, which will take two
+arguments : our input converted to an integer by scanf, and a literal number :
+0x1337d00d (== 322424827). The test function will compare theses numbers, and
+launch the decrypt function with a random parameter if our input is bigger
+than the second parameter + 21. Otherwise the test function jumps on an address
+obtained with a dereference of that difference multiplied by four, and then
+added to antoher address (0x80489f0). A logical choice here is to brute force
+(only 21 possible jumps), so we are going to give it a shot, by giving level03
+the 21 possibles inputs above our literal value.
+********************************************************************************
+level03@OverRide:~$ for i in {322424827..322424848}
+> do
+> echo $i > /tmp/tmp; cat /tmp/tmp - | ./level03
+> done
+***********************************
+*               level03         **
+***********************************
+ls
+ls: cannot open directory .: Permission denied
+pwd
+/home/users/level03
+cd ../level04
+cat .pass
+kgv3tkEb9h2mLkRsPkXRfc2mHbjMxQzvb2FrgKkf
