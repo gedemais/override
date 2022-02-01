@@ -48,7 +48,6 @@ int	test(int n, unsigned int offset)
 	decrypt(addr);
 	goto out;
 
-	decrypt(rand());
 	out : return (0);
 }
 
