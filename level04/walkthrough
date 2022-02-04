@@ -138,7 +138,7 @@ Dump of assembler code for function main:
    0x080486cc <+4>:	push   %ebx
    0x080486cd <+5>:	and    $0xfffffff0,%esp
    0x080486d0 <+8>:	sub    $0xb0,%esp
-   0x080486d6 <+14>:	call   0x8048550 <fork@plt>
+   0x080486d6 <+14>:	call   0x8048550 <fork@plt> 
    0x080486db <+19>:	mov    %eax,0xac(%esp)
    0x080486e2 <+26>:	lea    0x20(%esp),%ebx
    0x080486e6 <+30>:	mov    $0x0,%eax
