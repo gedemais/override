@@ -4,8 +4,8 @@ int main()
 {
     int     tmp;
     int     status;
-    char    buff[32];
     pid_t   addr;
+    char    buff[32];
 
     addr = fork();
     memset(buff, 32, 0);
