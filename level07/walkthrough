@@ -78,8 +78,8 @@ Dump of assembler code for function main:
    0x08048735 <+18>:	mov    %eax,0x1c(%esp)
    0x08048739 <+22>:	mov    0x10(%ebp),%eax
    0x0804873c <+25>:	mov    %eax,0x18(%esp)
-   0x08048740 <+29>:	mov    %gs:0x14,%eax
-   0x08048746 <+35>:	mov    %eax,0x1cc(%esp)
+   0x08048740 <+29>:	mov    %gs:0x14,%eax         // stack canary (to detect a stack buffer overflow before execution of malicious code can occur)
+   0x08048746 <+35>:	mov    %eax,0x1cc(%esp)      // puts a random small integer at 0x1cc(%esp), it is for the canary protection.
    0x0804874d <+42>:	xor    %eax,%eax
    0x0804874f <+44>:	movl   $0x0,0x1b4(%esp)
    0x0804875a <+55>:	movl   $0x0,0x1b8(%esp)
