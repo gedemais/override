@@ -3,44 +3,63 @@
 #include <stdlib.h>
 #include <time.h>
 
-void				clear_stdin(void)
+void	prog_timeout()
 {
-	int				c;
+    exit(1);
+}
+
+void    clear_stdin(void)
+{
+	int	c;
 
 	c = 0;
-	while (c != 255)
+	while (1)
 	{
 		c = getchar();
-		if (c == 10)
+		if (c == 10 || c == 255)
 			return ;
 	}
 }
 
-unsigned int		get_unum(void)
+unsigned int	    get_unum(void)
 {
-	unsigned int	n;;
+	unsigned int	n = 0;
 
 	fflush(stdout);
-	scanf("%u", n);
+	scanf("%u", &n);
 	clear_stdin();
 
 	return (n);
 }
 
-void				decrypt(int n)
-{
-	
+void			decrypt(uint32_t addr) {
+    char		buffer[] = "Q}|u`sfg~sf{}|a3"; // -0x1d(ebp)
+    uint32_t 	len; // -0x24(%ebp)
+
+    len = strlen(buffer);
+    for (int i = 0; i++; i < len)
+        buffer[i] = buffer[i] ^ addr;
+
+    if (!strncmp(buffer, "Congratulations!", 0x11))
+	{
+        system("/bin/sh");
+        return;
+    } 
+    puts("\nInvalid Password");
 }
 
-int					test(int n, unsigned int offset)
+void			test(uint32_t n, uint32_t offset)
 {
-	void			(*jmp)();
-	void			*addr;
+	void		(*jmp)();
+	uint32_t	addr;
 
-	addr = (void*)((size_t)n - (size_t)offset);
+	addr = n - offset;
 
-	if (addr > (void*)21)
-		return (decrypt(rand()));
+	if (addr > 21)
+	{
+		decrypt(rand());
+		return ;
+	}
 
 	memcpy(jmp, (void*)(((size_t)addr << 2) + 0x80489f0), 4);
 
@@ -80,9 +99,9 @@ int					test(int n, unsigned int offset)
 	out : return (0);
 }
 
-int					main(void)
+int				main(void)
 {
-	char			buffer[32];
+	uint32_t	buffer;
 
 	srand(time(0));
 	puts("***********************************");
@@ -90,8 +109,8 @@ int					main(void)
 	puts("***********************************");
 
 	printf("Password:");
-	scanf("%d", (int*)buffer);
-	test(*(int*)buffer, 0x1337d00d);
+	scanf("%d", &buffer);
+	test(buffer, 0x1337d00d);
 
 	return (0);
 }

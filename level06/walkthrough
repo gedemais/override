@@ -155,6 +155,12 @@ Dump of assembler code for function auth:
    0x08048878 <+304>:	ret
 End of assembler dump.
 
+*****************************************************************************
+We see a call to ptrace() to prevent us to use gdb to modify or observe the 
+registers values. So we will disable it to watch what is in -0x10(%ebp) at
+auth+286 and obtain the serial corresponding to what we have entered in the
+login.
+*****************************************************************************
 (gdb) catch syscall ptrace
 Catchpoint 1 (syscall 'ptrace' [26])
 (gdb) commands 1

