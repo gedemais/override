@@ -38,16 +38,16 @@ int                 store_number(char * buff)
     n = get_unum();
     printf(" Index: "); //0x8048add
     i = get_unum();
-    if ((((0xaaaaaaab * i) >> 1) * 3 - i) != 0 && n >> 0x18 != 0xb7) // if (i % 3 == 0 && n >> 0x18 != 0xb7)
+    if ((i - (((0xaaaaaaab * i) >> 1) * 3)) != 0 && n >> 0x18 != 0xb7) // if (i % 3 == 0 && n >> 0x18 != 0xb7)
     {
-        buff[i << 2] = n;
+        buff[i] = n;
         return (0);
     }
     puts(" *** ERROR! ***"); //0x8048ae6
     puts("   This index is reserved for wil!"); //0x8048af8
     puts(" *** ERROR! ***"); //0x8048ae6
+    
     return (1);
-
 }
 
 int         read_number(char *buff)
@@ -65,7 +65,7 @@ int         main(int ac, char **av, char **env)
 {
     int     ret; //1b4(%esp)
     char    cmd_buff[20] = {0}; //1b8(%esp)
-    char    buff[100] = {0}; // 0x24(%esp)
+    int     buff[100] = {0}; // 0x24(%esp)
     char    *tmp;
     char    *tmp2;
 
