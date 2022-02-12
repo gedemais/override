@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 
 void    prog_timeout()
 {
@@ -29,8 +30,9 @@ unsigned int	    get_unum(void)
 	return (n);
 }
 
-int                 store_number(char * buff)
+int                 store_number(u_int8_t *buff)
 {
+    u_int8_t        *tmp;
     unsigned int    n = 0;  //-0x10(%ebp)
     unsigned int    i = 0; //-0xc(%ebp)
 
@@ -40,7 +42,7 @@ int                 store_number(char * buff)
     i = get_unum();
     if ((i - (((0xaaaaaaab * i) >> 1) * 3)) != 0 && n >> 0x18 != 0xb7) // if (i % 3 == 0 && n >> 0x18 != 0xb7)
     {
-        buff[i] = n;
+        memcpy((buff + i * 4), &n, 4);
         return (0);
     }
     puts(" *** ERROR! ***"); //0x8048ae6
@@ -61,13 +63,13 @@ int         read_number(char *buff)
     return (0);
 }
 
-int         main(int ac, char **av, char **env)
+int             main(int ac, char **av, char **env)
 {
-    int     ret; //1b4(%esp)
-    char    cmd_buff[20] = {0}; //1b8(%esp)
-    int     buff[100] = {0}; // 0x24(%esp)
-    char    *tmp;
-    char    *tmp2;
+    int         ret; //1b4(%esp)
+    char        cmd_buff[20] = {0}; //1b8(%esp)
+    u_int8_t    buff[400] = {0}; // 0x24(%esp)
+    char        *tmp;
+    char        *tmp2;
 
     tmp = av;
     tmp2 = env;
