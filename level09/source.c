@@ -31,10 +31,10 @@ void 		set_msg(char *username)
 	char	buff[1024];
 
 	memset(buff, 0, 128);
-	puts(""); //0x265(%rip) 0xbcd
-	printf(""); //0x26b(%rip) 0xbdf
-	fgets(buff, 1024, ""); // 0x201630(%rip) 0x201fb8
-	strncpy(username, buff, *username+0xb4);
+	puts(">: Msg @Unix-Dude"); //0x265(%rip) 0xbcd
+	printf(">>: "); //0x26b(%rip) 0xbdf
+	fgets(buff, 1024, stdin); // 0x201630(%rip) 0x201fb8
+	strncpy(username, buff, *(username + 0xb4));
 }
 
 int			handle_msg(void)
