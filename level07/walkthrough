@@ -376,8 +376,8 @@ Now we can't use a shellcode, because the arguments of the main function, as the
 environment are zero-filled at the start of the main, so we have to find another
 way to get a shell or a command executed. We can search for the address of the
 system function into libc, to write it in the eip register, in order to call it.
-We can then find the address of the string "/bin/sh in libc", and write it 4 bytes
-after eip, in order to make it the parameter of system.
+We can then find the address of the string "/bin/sh" in libc, and write it 4 bytes
+after eip, in order to make it the parameter of the system call.
 ********************************************************************************
 level07@OverRide:~$ gdb ./level07
 (gdb) b main

