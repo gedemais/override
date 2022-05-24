@@ -1,4 +1,5 @@
 level06@OverRide:~$ gdb ./level06
+
 (gdb) disas main
 Dump of assembler code for function main:
    0x08048879 <+0>:	push   %ebp
@@ -65,7 +66,7 @@ Dump of assembler code for function main:
    0x08048980 <+263>:	leave
    0x08048981 <+264>:	ret
 End of assembler dump.
-(gdb)
+
 (gdb) disas auth
 Dump of assembler code for function auth:
    0x08048748 <+0>:	push   %ebp
@@ -161,6 +162,7 @@ registers values. So we will disable it to watch what is in -0x10(%ebp) at
 auth+286 and obtain the serial corresponding to what we have entered in the
 login.
 *****************************************************************************
+
 (gdb) catch syscall ptrace
 Catchpoint 1 (syscall 'ptrace' [26])
 (gdb) commands 1

